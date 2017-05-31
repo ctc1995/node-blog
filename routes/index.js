@@ -6,7 +6,7 @@ var crypto = require('crypto'),
     Post = require('../models/post'),
     setting = require('../setting'),
     checkToken = require('../models/checkToken'),
-    secret = require('../public/const').sectet
+    secret = setting.tokenSecret;
 
 module.exports = function(app){
   //for parsing application/json
@@ -89,7 +89,7 @@ module.exports = function(app){
             res.send({status: 'error', message:"出错了，原因如下：" + err });
             return;
           }
-          if(user.length != 0){
+          if(user){
             res.send({ status: 'failed', message: "用户已存在!" });
             return;
           }
@@ -113,7 +113,7 @@ module.exports = function(app){
       if(err){
         res.send({ status: 'error', message: "出错了，原因如下：" + err });
       }
-      else if(user==0){
+      else if(!user){
         res.send({ status: 'failed', message: "用户不存在！" });
       }else if(user.password != password){
         res.send({ status: 'failed', message: "密码错误!" });
@@ -124,7 +124,8 @@ module.exports = function(app){
           name: user.name,
           password: user.password
         }
-        var token = jwt.sign(userInfo, secret, { expiresIn: 15 })//, 
+        var token = jwt.sign(userInfo, secret, { expiresIn: 60*60 })//60s * 60min = 1hour,
+        console.log(token); 
         res.send({ status: 'successed', message: token});
       }
     })
@@ -143,15 +144,14 @@ module.exports = function(app){
   })
   //解决跨域的问题
   app.all('*',function(req, res, next){
-    res.header('Access-Control-Allow-Origin', setting.client);
-
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers','Content-Type, Content-Length,'
      + 'Authorization, Accept, X-Requested-With');
 
-    res.setHeader("Access-Control-Max-Age", "3600");
+    //res.setHeader("Access-Control-Max-Age", "3600");
     //是否支持cookie跨域
     res.setHeader("Access-Control-Allow-Credentials", "true"); 
-
     next();
   });
   app.all('/get/*', function(req, res, next){
@@ -164,6 +164,7 @@ module.exports = function(app){
     }
   });
   app.all('/post/*', function(req, res, next){
+    //res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
     if(req.method == "OPTIONS"){
       res.send(200);

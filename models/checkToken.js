@@ -1,5 +1,5 @@
 var jwt = require('jsonwebtoken'),
-    secret = require('../public/const').sectet
+    secret = require('../setting').tokenSecret
 
 function checkAuthor(req, res, next){
     var bearerToken;
