@@ -34,4 +34,17 @@ var posts = mongoose.Schema({
 //声明一个Posts模型,使用它和数据库交互
 PostsModel =  mongoose.model('posts', posts);
 
-module.exports = {"Users": UserModel,"Posts": PostsModel}
+var imgs = mongoose.Schema({
+    name: String,
+    url: String,
+    type: String,
+    flag: String
+})
+//声明一个Imgs模型,使用它和数据库交互
+ImgsModel = mongoose.model('ImgsInfo', imgs);
+
+module.exports = {
+    "Users": UserModel,
+    "Posts": PostsModel, 
+    "Imgs": ImgsModel,
+}

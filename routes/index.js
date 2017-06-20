@@ -1,6 +1,6 @@
 var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken');
-
+var multer = require("multer");
 var crypto = require('crypto'),
     User = require('../models/users'),
     Post = require('../models/post'),
@@ -9,13 +9,59 @@ var crypto = require('crypto'),
     secret = setting.tokenSecret;
 
 module.exports = function(app){
+  //解决跨域的问题
+  app.all('*',function(req, res, next){
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers','Content-Type, Content-Length,'
+     + 'Authorization, Accept, X-Requested-With');
+
+    //res.setHeader("Access-Control-Max-Age", "3600");
+    //是否支持cookie跨域
+    res.setHeader("Access-Control-Allow-Credentials", "true"); 
+    next();
+  });
+  app.all('/get/*', function(req, res, next){
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    if(req.method == 'OPTIONS'){
+      res.send(200);
+    }else{
+      console.log(req.method);
+      next();
+    }
+  });
+  app.all('/post/*', function(req, res, next){
+    //res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    if(req.method == "OPTIONS"){
+      res.send(200);
+    }else{
+      console.log(req.method);
+      next();
+    }
+  });
   //for parsing application/json
   app.use(bodyParser.json());
   //for parsing application/x-www-form-urlencoded
   app.use(bodyParser.urlencoded({ extended: true }));
-
   //for parsing text,text/xml
   app.use(bodyParser.text({ type: 'text/*' }));
+  //图片上传
+  var storage = multer.diskStorage({
+    // destino del fichero
+    destination: function (req, file, cb) {
+      cb(null, './uploads/')
+    },
+    // renombrar fichero
+    filename: function (req, file, cb) {
+      cb(null, file.originalname);
+    }
+  });
+  var upload = multer({ storage: storage });
+  app.post("/post/img", upload.array("uploads[]", 12), function (req, res) {
+    console.log('files', req.files);
+    res.send(req.files);
+  });
 
   app.get('/', function(req, res){
     res.render('index',{ title: 'Express' });
@@ -142,35 +188,5 @@ module.exports = function(app){
       }
     })
   })
-  //解决跨域的问题
-  app.all('*',function(req, res, next){
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers','Content-Type, Content-Length,'
-     + 'Authorization, Accept, X-Requested-With');
-
-    //res.setHeader("Access-Control-Max-Age", "3600");
-    //是否支持cookie跨域
-    res.setHeader("Access-Control-Allow-Credentials", "true"); 
-    next();
-  });
-  app.all('/get/*', function(req, res, next){
-    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    if(req.method == 'OPTIONS'){
-      res.send(200);
-    }else{
-      console.log(req.method);
-      next();
-    }
-  });
-  app.all('/post/*', function(req, res, next){
-    //res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    if(req.method == "OPTIONS"){
-      res.send(200);
-    }else{
-      console.log(req.method);
-      next();
-    }
-  });
+  
 }
