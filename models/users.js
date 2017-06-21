@@ -28,10 +28,11 @@ User.prototype.save = function(callback){
 };
 //读取用户信息
 User.get = function(name, callback){
-    console.log(name)
     if(name){
+        console.log(name)
         db.Users.findOne({"name": name},
             function(err, user){
+                console.log(user)
                 if(err){
                     console.err(err);
                     return callback(err);//返回err信息

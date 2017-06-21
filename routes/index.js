@@ -1,14 +1,47 @@
 var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken');
+var multer = require('multer');
 
 var crypto = require('crypto'),
     User = require('../models/users'),
     Post = require('../models/post'),
+    qiniuToken = require('../models/qiniuToken')
     setting = require('../setting'),
     checkToken = require('../models/checkToken'),
     secret = require('../public/const').sectet
 
 module.exports = function(app){
+  //解决跨域的问题
+  app.all('*',function(req, res, next){
+    res.header('Access-Control-Allow-Origin', '*');
+
+    res.header('Access-Control-Allow-Headers','Content-Type, Content-Length,'
+     + 'Authorization, Accept, X-Requested-With');
+
+    res.setHeader("Access-Control-Max-Age", "3600");
+    //是否支持cookie跨域
+    res.setHeader("Access-Control-Allow-Credentials", "true"); 
+
+    next();
+  });
+  app.all('/get/*', function(req, res, next){
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    if(req.method == 'OPTIONS'){
+      res.send(200);
+    }else{
+      console.log(req.method);
+      next();
+    }
+  });
+  app.all('/post/*', function(req, res, next){
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    if(req.method == "OPTIONS"){
+      res.send(200);
+    }else{
+      console.log(req.method);
+      next();
+    }
+  });
   //for parsing application/json
   app.use(bodyParser.json());
   //for parsing application/x-www-form-urlencoded
@@ -54,9 +87,9 @@ module.exports = function(app){
       req.session.user = null;
       //销毁服务端Session
       req.session.destroy();  
-      res.send({ status: 'successed', message: "登出成功！" })
+      res.send(200, "登出成功！" )
     } catch(err){
-      res.send({ status: 'failed', message: "出错了，原因如下：" + err })
+      res.send(500, "出错了，原因如下：" + err )
     }
   })
   //检查是否已登录
@@ -73,7 +106,7 @@ module.exports = function(app){
         psd = req.body.psd,
         psd_re = req.body['psd_repeat'];
     if(psd != psd_re){
-      res.send({ status: 'failed', message: "两次输入的密码不一致！" });
+      res.send(500, "两次输入的密码不一致！" );
       return
     }
     var md5 = crypto.createHash('md5'),
@@ -86,37 +119,38 @@ module.exports = function(app){
         //检查用户名是否已存在
         User.get(name,function(err, user){
           if(err){
-            res.send({status: 'error', message:"出错了，原因如下：" + err });
+            res.send(500, "出错了，原因如下：" + err );
             return;
           }
-          if(user.length != 0){
-            res.send({ status: 'failed', message: "用户已存在!" });
+          if(user){
+            res.send(500,  "用户已存在!" );
             return;
           }
           newUser.save(function(err, user){
             if(err){
-              res.send({ status: 'error', message: "出错了，原因如下：" + err });
+              res.send(500, "出错了，原因如下：" + err );
               return;
             }
             else{
-              res.send({ status: 'success', message: "注册成功!" });
+              res.send(200, "注册成功!" );
             }
           })
         })
   })
   //用户登录 √
   app.post('/post/login', function(req, res){
+    //res.header("Access-Control-Allow-Origin", "*");
     var md5 = crypto.createHash('md5'),
         password = md5.update(req.body.psd).digest('hex');
     //查询用户信息
     User.get(req.body.name,function(err, user){
       if(err){
-        res.send({ status: 'error', message: "出错了，原因如下：" + err });
+        res.send(500, "出错了，原因如下：" + err );
       }
-      else if(user==0){
-        res.send({ status: 'failed', message: "用户不存在！" });
+      else if(!user){
+        res.send(500, "用户不存在！" );
       }else if(user.password != password){
-        res.send({ status: 'failed', message: "密码错误!" });
+        res.send(500, "密码错误!" );
       }else{
         //用户名密码都匹配后，将用户信息存入 session
         //req.session.user = user;
@@ -124,8 +158,8 @@ module.exports = function(app){
           name: user.name,
           password: user.password
         }
-        var token = jwt.sign(userInfo, secret, { expiresIn: 15 })//, 
-        res.send({ status: 'successed', message: token});
+        var token = jwt.sign(userInfo, secret, { expiresIn: 60*60 })//, 
+        res.send(200, token);
       }
     })
   })
@@ -135,41 +169,33 @@ module.exports = function(app){
         post = new Post(currentUser, req.body.title, req.body.post);
     post.save(function(err){
       if (err) {
-        res.send({ status: 'failed', message: "出错了，原因如下：" + err });
+        res.send(500, "出错了，原因如下：" + err );
       }else{
-        res.send({ status: 'successed', message: "保存成功！" });
+        res.send(200, "保存成功！" );
       }
     })
   })
-  //解决跨域的问题
-  app.all('*',function(req, res, next){
-    res.header('Access-Control-Allow-Origin', setting.client);
-
-    res.header('Access-Control-Allow-Headers','Content-Type, Content-Length,'
-     + 'Authorization, Accept, X-Requested-With');
-
-    res.setHeader("Access-Control-Max-Age", "3600");
-    //是否支持cookie跨域
-    res.setHeader("Access-Control-Allow-Credentials", "true"); 
-
-    next();
-  });
-  app.all('/get/*', function(req, res, next){
-    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    if(req.method == 'OPTIONS'){
-      res.send(200);
-    }else{
-      console.log(req.method);
-      next();
+  var storage =   multer.diskStorage({
+    destination: function (req, file, callback) {
+      callback(null, './uploads');
+    },
+    filename: function (req, file, callback) {
+      callback(null, file.fieldname + '-' + Date.now());
     }
   });
-  app.all('/post/*', function(req, res, next){
-    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    if(req.method == "OPTIONS"){
-      res.send(200);
-    }else{
-      console.log(req.method);
-      next();
-    }
+  var upload = multer({ storage : storage}).single('userPhoto');
+  app.post('/post/photo',function(req,res){
+    console.log(req.files);
+    upload(req,res,function(err) {
+      if(err) {
+          return res.end("Error uploading file.");
+      }
+      res.end("File is uploaded");
+    });
+    // var uploadInfo = new qiniuToken(req.body);
+    // uploadInfo.uptoken(function(token){
+    //   res.status(200).send(token);
+    //   uploadInfo.uploadFile(token, req.body, req.body,)
+    // })
   });
 }
