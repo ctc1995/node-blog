@@ -47,6 +47,7 @@ User.get = function(name, callback){
                     return callback(err);//返回err信息
                 }
                 callback(null, users);//成功,err为null,并返回查询的用户信息
-            })
+            }
+        )
     }
 }

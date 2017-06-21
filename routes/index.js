@@ -8,20 +8,18 @@ var crypto = require('crypto'),
     qiniuToken = require('../models/qiniuToken')
     setting = require('../setting'),
     checkToken = require('../models/checkToken'),
-    secret = require('../public/const').sectet
+    secret = setting.tokenSecret;
 
 module.exports = function(app){
   //解决跨域的问题
   app.all('*',function(req, res, next){
     res.header('Access-Control-Allow-Origin', '*');
-
     res.header('Access-Control-Allow-Headers','Content-Type, Content-Length,'
      + 'Authorization, Accept, X-Requested-With');
 
     res.setHeader("Access-Control-Max-Age", "3600");
     //是否支持cookie跨域
     res.setHeader("Access-Control-Allow-Credentials", "true"); 
-
     next();
   });
   app.all('/get/*', function(req, res, next){
@@ -46,9 +44,46 @@ module.exports = function(app){
   app.use(bodyParser.json());
   //for parsing application/x-www-form-urlencoded
   app.use(bodyParser.urlencoded({ extended: true }));
-
   //for parsing text,text/xml
   app.use(bodyParser.text({ type: 'text/*' }));
+  //图片上传
+  var storage = multer.diskStorage({
+    // destino del fichero
+    destination: function (req, file, cb) {
+      cb(null, './uploads/')
+    },
+    // renombrar fichero
+    filename: function (req, file, cb) {
+      cb(null, file.originalname);
+    }
+  });
+  var upload = multer({ storage: storage });
+  app.post("/post/img", upload.array("uploads[]", 12), function (req, res) {
+    var sendToken = [];
+    var send = false;
+    var sendError;
+    for(var i =0; i<req.files.length; i++){
+      console.log('./uploads/'+req.files[i].filename,66);
+      var uploadInfo = new qiniuToken(req.files[i].filename);
+      uploadInfo.uptoken(function(token){
+        sendToken.push(token)
+        uploadInfo.uploadFile(token, req.files[i].filename, './uploads/'+req.files[i].filename, function(err, ret){
+          if(err){
+            send = false;
+            sendError = err;
+          }
+          else{
+            sendToken.push(ret);
+          }
+        })
+      })
+    }
+    if(!send){
+      res.status(200).send(sendToken);
+    }else{
+      res.status(500).send(sendError)
+    }
+  });
 
   app.get('/', function(req, res){
     res.render('index',{ title: 'Express' });
@@ -175,27 +210,4 @@ module.exports = function(app){
       }
     })
   })
-  var storage =   multer.diskStorage({
-    destination: function (req, file, callback) {
-      callback(null, './uploads');
-    },
-    filename: function (req, file, callback) {
-      callback(null, file.fieldname + '-' + Date.now());
-    }
-  });
-  var upload = multer({ storage : storage}).single('userPhoto');
-  app.post('/post/photo',function(req,res){
-    console.log(req.files);
-    upload(req,res,function(err) {
-      if(err) {
-          return res.end("Error uploading file.");
-      }
-      res.end("File is uploaded");
-    });
-    // var uploadInfo = new qiniuToken(req.body);
-    // uploadInfo.uptoken(function(token){
-    //   res.status(200).send(token);
-    //   uploadInfo.uploadFile(token, req.body, req.body,)
-    // })
-  });
 }

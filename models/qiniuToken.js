@@ -4,26 +4,28 @@
     qiniu.conf.SECRET_KEY = 'fLZ63PHYLqp8BFRzoUIMtYrb7CcBlboGN3qIojAf';
     //要上传的空间
     var bucket = 'blog';
-
     function Upload(key){
         this.key = key;
     }
     module.exports = Upload;
+
+    //获取上传Token
     Upload.prototype.uptoken = function(callback){
         var key = this.key
         var putPolicy = new qiniu.rs.PutPolicy(bucket+":"+key);
         return callback(putPolicy.token())
     }
-    Upload.prototype.uploadFile = function(token, key, loaclFile, callback){
+    //上传文件
+    Upload.prototype.uploadFile = function(token, key, localFile, callback){
         var extra = new qiniu.io.PutExtra();
-        qiniu.io.putFile(uptoken, key, localFile, extra, function(err, ret) {
+        qiniu.io.putFile(token, key, localFile, extra, function(err, ret) {
             if(!err) {
                 // 上传成功， 处理返回值
-                console.log(ret.hash, ret.key, ret.persistentId);   
-                return callback(ret.hash, ret.key, ret.persistentId)   
+                console.log(ret.hash, ret.key, ret.persistentId,24);   
+                return callback(null, ret);
             } else {
                 // 上传失败， 处理返回代码
-                console.log(err);
+                console.log(err,28);
                 return callback(err);
             }
         });

@@ -1,5 +1,5 @@
 module.exports={
-    cookieSecret: 'myblog',
+    tokenSecret: '!c@t#c$1%9^9&5',
     db: 'testBlog',
     host: '127.0.0.1',
     port: 27017,
