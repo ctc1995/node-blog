@@ -5,7 +5,8 @@ var multer = require('multer');
 var crypto = require('crypto'),
     User = require('../models/users'),
     Post = require('../models/post'),
-    qiniuToken = require('../models/qiniuToken')
+    Img = require('../models/img'),
+    qiniuToken = require('../models/qiniuToken'),
     setting = require('../setting'),
     checkToken = require('../models/checkToken'),
     secret = setting.tokenSecret;
@@ -60,28 +61,45 @@ module.exports = function(app){
   var upload = multer({ storage: storage });
   app.post("/post/img", upload.array("uploads[]", 12), function (req, res) {
     var sendToken = [];
-    var send = false;
+    var send = true;
     var sendError;
     for(var i =0; i<req.files.length; i++){
-      console.log('./uploads/'+req.files[i].filename,66);
+      console.log('./uploads/',req.files[i].filename,66);
+      var fileName = req.files[i].filename;
       var uploadInfo = new qiniuToken(req.files[i].filename);
-      uploadInfo.uptoken(function(token){
-        sendToken.push(token)
-        uploadInfo.uploadFile(token, req.files[i].filename, './uploads/'+req.files[i].filename, function(err, ret){
-          if(err){
-            send = false;
-            sendError = err;
-          }
-          else{
-            sendToken.push(ret);
-          }
-        })
+      var newImg = new Img(
+        fileName,
+        'http://omly572p2.bkt.clouddn.com/'+fileName+'-img1',
+        "jpg",
+        "first"
+      );
+      console.log(newImg);
+      newImg.save(function(err, img){
+        if(err){
+          send = false;
+          sendError = err;
+        }
+        else{
+          console.log("save DB success!")
+          uploadInfo.uptoken(function(token){
+            sendToken.push(token)
+            uploadInfo.uploadFile(token, fileName, './uploads/'+fileName, function(err, ret){
+              if(err){
+                send = false;
+                sendError = err;
+              }
+              else{
+                sendToken.push(ret);
+              }
+            })
+          })
+        }
       })
-    }
-    if(!send){
-      res.status(200).send(sendToken);
+    } 
+    if(send){
+      res.send(200, sendToken);
     }else{
-      res.status(500).send(sendError)
+      res.send(500, sendError)
     }
   });
 
@@ -151,6 +169,7 @@ module.exports = function(app){
           password: psd,
           email: req.body.email
         });
+        console.log(newUser);
         //检查用户名是否已存在
         User.get(name,function(err, user){
           if(err){

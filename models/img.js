@@ -19,8 +19,11 @@ Img.prototype.save = function(callback){
     };
     var imgModel = new db.Imgs(img);
     imgModel.save(function(err){
-        if(err) return callback(err);//错误，返回 err 信息
-        else{callback(null)};//成功！
+        if(err) {
+            console.log(err);
+            return callback(err);
+        }//错误，返回 err 信息
+        callback(null)//成功！
     })
 }
 Img.get = function(name, callback){

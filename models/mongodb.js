@@ -41,7 +41,7 @@ var imgs = mongoose.Schema({
     flag: String
 })
 //声明一个Imgs模型,使用它和数据库交互
-ImgsModel = mongoose.model('ImgsInfo', imgs);
+ImgsModel = mongoose.model('imgs', imgs);
 
 module.exports = {
     "Users": UserModel,
