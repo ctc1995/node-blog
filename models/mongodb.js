@@ -4,7 +4,7 @@ var setting = require('../setting');
 //用户模型
 var UserModel;
 //文章模型
-var PostsModel;
+var ProductsModel;
 //连接数据库
 var address = 'mongodb://'+setting.host+'/'+setting.db;
 mongoose.connect(address);
@@ -19,20 +19,17 @@ var users = mongoose.Schema({
 UserModel = mongoose.model('users', users);
 
 //定义post-文章文档格式
-var posts = mongoose.Schema({
+var products = mongoose.Schema({
     name: String,
-    time: new mongoose.Schema({
-        date: Date,
-        year: Number,
-        month: String,
-        day: String,
-        minute: String
-    }),
-    title: String,
-    post: String
+    flag: Array,
+    producImgUrl: String,
+    price: Number,
+    type: String,
+    jianjie: String,
+    descr: String
 });
-//声明一个Posts模型,使用它和数据库交互
-PostsModel =  mongoose.model('posts', posts);
+//声明一个Products模型,使用它和数据库交互
+ProductsModel =  mongoose.model('products', products);
 
 var imgs = mongoose.Schema({
     name: String,
@@ -43,8 +40,20 @@ var imgs = mongoose.Schema({
 //声明一个Imgs模型,使用它和数据库交互
 ImgsModel = mongoose.model('imgs', imgs);
 
+var webinfo = mongoose.Schema({
+    youhui: String,
+    address: String,
+    name: String,
+    phone: new mongoose.Schema({
+        number: Number,
+        man: String,
+    }),
+})
+WebInfoModel = mongoose.model('webinfo', webinfo)
+
 module.exports = {
     "Users": UserModel,
-    "Posts": PostsModel, 
+    "Products": ProductsModel, 
     "Imgs": ImgsModel,
+    "WebInfo": WebInfoModel
 }

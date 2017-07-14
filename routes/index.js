@@ -4,7 +4,7 @@ var multer = require('multer');
 
 var crypto = require('crypto'),
     User = require('../models/users'),
-    Post = require('../models/post'),
+    Product = require('../models/product'),
     Img = require('../models/img'),
     qiniuToken = require('../models/qiniuToken'),
     setting = require('../setting'),
@@ -83,13 +83,17 @@ module.exports = function(app){
           console.log("save DB success!")
           uploadInfo.uptoken(function(token){
             sendToken.push(token)
+            console.log(token);
             uploadInfo.uploadFile(token, fileName, './uploads/'+fileName, function(err, ret){
               if(err){
                 send = false;
                 sendError = err;
+                console.log(err,1)
               }
               else{
                 sendToken.push(ret);
+                console.log(ret,2)
+                res.send(200, {link: 'http://omly572p2.bkt.clouddn.com/'+fileName+'-img1'});
               }
             })
           })
@@ -97,31 +101,14 @@ module.exports = function(app){
       })
     } 
     if(send){
-      res.send(200, sendToken);
+      
     }else{
       res.send(500, sendError)
     }
   });
-
   app.get('/', function(req, res){
     res.render('index',{ title: 'Express' });
   })
-  //获取博客列表
-  app.get('/get/post', function(req, res) {
-    var username = null;
-    //根据查询条件查询
-    if(req.query.name != null){
-      username = req.query.name;
-    }
-    //查询所有
-    if(req.query.isAll){
-      username = null;
-    }
-    Post.get(username,function(err,posts){
-      if(err){posts = []};
-      res.send(posts);
-    })
-  });
   //请求某个用户的信息 √
   app.get('/get/user', checkToken, function(req, res){
     var username = null;
@@ -218,10 +205,9 @@ module.exports = function(app){
     })
   })
   //保存用户新增的文章
-  app.post('/post/post', function(req, res){
-    var currentUser = req.session['user'],
-        post = new Post(currentUser, req.body.title, req.body.post);
-    post.save(function(err){
+  app.post('/post/product', function(req, res){
+    var product = new Product(req.body);
+    product.save(function(err){
       if (err) {
         res.send(500, "出错了，原因如下：" + err );
       }else{
