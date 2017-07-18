@@ -18,11 +18,11 @@ var users = mongoose.Schema({
 //声明一个User模型,使用它和数据库交互
 UserModel = mongoose.model('users', users);
 
-//定义post-文章文档格式
+//定义products-产品文档格式
 var products = mongoose.Schema({
     name: String,
     flag: Array,
-    producImgUrl: String,
+    imgUrl: String,
     price: Number,
     type: String,
     jianjie: String,
@@ -44,16 +44,21 @@ var webinfo = mongoose.Schema({
     youhui: String,
     address: String,
     name: String,
-    phone: new mongoose.Schema({
-        number: Number,
-        man: String,
-    }),
+    phone: Array,
 })
-WebInfoModel = mongoose.model('webinfo', webinfo)
+WebInfoModel = mongoose.model('webinfo', webinfo);
 
+var type = mongoose.Schema({
+    name: String,
+    descr: String,
+    parent: String,
+    items: Array,
+})
+TypeModel = mongoose.model('type', type);
 module.exports = {
     "Users": UserModel,
     "Products": ProductsModel, 
     "Imgs": ImgsModel,
-    "WebInfo": WebInfoModel
+    "WebInfo": WebInfoModel,
+    "Type": TypeModel,
 }

@@ -6,6 +6,7 @@ var crypto = require('crypto'),
     User = require('../models/users'),
     Product = require('../models/product'),
     Img = require('../models/img'),
+    Type = require('../models/type')
     qiniuToken = require('../models/qiniuToken'),
     setting = require('../setting'),
     checkToken = require('../models/checkToken'),
@@ -34,6 +35,15 @@ module.exports = function(app){
   });
   app.all('/post/*', function(req, res, next){
     res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    if(req.method == "OPTIONS"){
+      res.send(200);
+    }else{
+      console.log(req.method);
+      next();
+    }
+  });
+  app.all('/put/*', function(req, res, next){
+    res.header('Access-Control-Allow-Methods', 'PUT, OPTIONS');
     if(req.method == "OPTIONS"){
       res.send(200);
     }else{
@@ -204,14 +214,114 @@ module.exports = function(app){
       }
     })
   })
-  //保存用户新增的文章
+  //保存用户新增的商品
   app.post('/post/product', function(req, res){
-    var product = new Product(req.body);
-    product.save(function(err){
-      if (err) {
+    var product = new Product(req.body),
+        prodName = req.body.name;
+    Product.get(prodName,function(err, productItem){
+      if(productItem){
+        var newData = req.body;
+          newData['__v'] = productItem['__v']
+        product.update(prodName, newData, function(err, product){
+            if(err){
+              res.send(500, "出错了，原因如下：" + err );
+            }
+            else{
+              res.send(product);
+            }
+        })
+      }
+      else{
+        product.save(function(err, productItem){
+          if (err) {
+            res.send(500, "出错了，原因如下：" + err );
+          }else{
+            res.send(200, productItem);
+          }
+        })
+      }
+    })
+  })
+  app.get('/get/product', function(req, res){
+    var prodName = null;
+    if(req.query.name !=null){
+      prodName = req.query.name
+    }
+    Product.get(prodName, function(err, products){
+      if(err){
+        products = [];
         res.send(500, "出错了，原因如下：" + err );
-      }else{
-        res.send(200, "保存成功！" );
+        return
+      }
+      res.send(products);
+    })
+  })
+  app.delete('/del/product', function(req, res){
+    var product = new Product(req.body);
+    var prodName = req.query.name;
+    Product.get(prodName, function(err, products){
+      if(products){
+        product.delete(prodName, function(err){
+          if(err){
+            res.send(500, "出错了，原因如下：" + err )
+          }
+          res.send("删除成功!")
+        })
+      }
+      else{
+        res.send("商品不存在")
+      }
+    })
+  })
+  app.get('/get/type', function(req, res){
+    var typeName = null;
+    if(req.query.name){
+      typeName = req.query.name;
+    }
+    Type.get(typeName, function(err, types){
+      if(err){
+        res.send(500, err);
+      }
+      res.send(types)
+    })
+  })
+  app.post('/post/type', function(req, res){
+    var newType = new Type(req.body);
+    newType.save(function(err, type){
+      if(err){
+        res.send(500, "出错了，原因如下：" + err );
+        return;
+      }
+      else{
+        res.send(200, "新建分类成功!" );
+      }
+    })
+  })
+  app.put('/put/type', function(req, res){
+    var type = new Type(req.body),
+        typeId = req.body['_id'];
+        newData = req.body;
+    type.update(typeId, newData, function(err, type){
+      if(err){
+        res.send(err);
+      }
+      res.send(type)
+    })
+  })
+  app.delete('/del/type', function(req, res){
+    var type = new Type(req.body);
+    var typeName = req.query.name;
+    Type.get(typeName, function(err, types){
+      if(types){
+        type.delete(typeName, function(err){
+          if(err){
+            res.send(500, "出错了，原因如下：" + err )
+          }
+          res.send("删除成功!")
+        })
+      }
+      else{
+        res.send("类别不存在")
       }
     })
   })
