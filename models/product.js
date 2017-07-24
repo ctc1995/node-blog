@@ -54,8 +54,8 @@ Product.prototype.save = function(callback){
     })
 }
 
-Product.prototype.update = function(name, newData, callback){
-    db.Products.update({"name" : name}, newData, function(err, product){
+Product.prototype.update = function(id, newData, callback){
+    db.Products.update({"id" : name}, newData, function(err, product){
         if(err){
             return callback(err);
         }

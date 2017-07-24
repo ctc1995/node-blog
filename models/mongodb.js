@@ -55,10 +55,20 @@ var type = mongoose.Schema({
     items: Array,
 })
 TypeModel = mongoose.model('type', type);
+
+var news = mongoose.Schema({
+    title: String,
+    content: String,
+    prodName: String,
+    imgUrl: String
+})
+NewsModel = mongoose.model('news', news);
+
 module.exports = {
     "Users": UserModel,
     "Products": ProductsModel, 
     "Imgs": ImgsModel,
     "WebInfo": WebInfoModel,
     "Type": TypeModel,
+    "News": NewsModel
 }

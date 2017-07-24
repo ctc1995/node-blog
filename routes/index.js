@@ -7,6 +7,7 @@ var crypto = require('crypto'),
     Product = require('../models/product'),
     Img = require('../models/img'),
     Type = require('../models/type')
+    News = require('../models/news')
     qiniuToken = require('../models/qiniuToken'),
     setting = require('../setting'),
     checkToken = require('../models/checkToken'),
@@ -79,7 +80,7 @@ module.exports = function(app){
       var uploadInfo = new qiniuToken(req.files[i].filename);
       var newImg = new Img(
         fileName,
-        'http://omly572p2.bkt.clouddn.com/'+fileName+'-img1',
+        'http://image.phukienthanh.shop/'+fileName+'-img1',
         "jpg",
         "first"
       );
@@ -103,7 +104,7 @@ module.exports = function(app){
               else{
                 sendToken.push(ret);
                 console.log(ret,2)
-                res.send(200, {link: 'http://omly572p2.bkt.clouddn.com/'+fileName+'-img1'});
+                res.send(200, {link: 'http://image.phukienthanh.shop/'+fileName+'-img1'});
               }
             })
           })
@@ -323,6 +324,51 @@ module.exports = function(app){
       else{
         res.send("类别不存在")
       }
+    })
+  })
+  app.post('/post/news', function(req, res){
+    var newNews = new News(req.body)
+    newNews.save(function(err, news){
+      if(err){
+        res.send(err);
+      }else{
+        res.send(news);
+      }
+    })
+  })
+  app.get('/get/news', function(req, res){
+    var newName = null;
+    if(req.query.name){
+      newName = req.query.name;
+    }
+    News.get(newName, function(err, news){
+      if(err){
+        res.send(err);
+      }else{
+        res.send(news);
+      }
+    })
+  })
+  app.delete('/del/news', function(req, res){
+    var news = new News(null),
+        newsName = req.query.name;
+      news.delete(newsName, function(err, news){
+        if(err){
+          res.send(err);
+        }else{
+          res.send("删除成功!");
+        }
+      })
+  })
+  app.put('/put/news', function(req, res){
+    var news = new News(req.body),
+        newsId = req.body['_id'];
+        newData = req.body;
+    news.update(newsId, newData, function(err, news){
+      if(err){
+        res.send(err);
+      }
+      res.send(news)
     })
   })
 }
