@@ -3,7 +3,7 @@ var db = require('./mongodb');
 function Product(product){
     this.name = product.name;
     this.flag = product.flag;
-    this.imgUrl = 'http://omly572p2.bkt.clouddn.com/'+product.imgUrl+'-img1';
+    this.imgUrl = 'http://image.phunkienthanh.shop/'+product.imgUrl+'-img1';
     this.price = product.price;
     this.type = product.type;
     this.jianjie = product.jianjie;
@@ -55,7 +55,7 @@ Product.prototype.save = function(callback){
 }
 
 Product.prototype.update = function(id, newData, callback){
-    db.Products.update({"id" : name}, newData, function(err, product){
+    db.Products.update({"id" : id}, newData, function(err, product){
         if(err){
             return callback(err);
         }

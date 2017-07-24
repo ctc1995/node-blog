@@ -53,8 +53,8 @@ News.prototype.update = function(id, newData, callback){
         callback(null, news)
     })
 }
-News.prototype.delete = function(name, callback){
-    db.News.remove({"name" : name}, function(err, news){
+News.prototype.delete = function(title, callback){
+    db.News.remove({"title" : title}, function(err, news){
         if(err){
             return callback(err);
         }

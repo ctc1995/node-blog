@@ -45,6 +45,8 @@ var webinfo = mongoose.Schema({
     address: String,
     name: String,
     phone: Array,
+    logo: String,
+    lunbo: Array
 })
 WebInfoModel = mongoose.model('webinfo', webinfo);
 

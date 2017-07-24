@@ -8,6 +8,7 @@ var crypto = require('crypto'),
     Img = require('../models/img'),
     Type = require('../models/type')
     News = require('../models/news')
+    WebInfo = require('../models/webInfo')
     qiniuToken = require('../models/qiniuToken'),
     setting = require('../setting'),
     checkToken = require('../models/checkToken'),
@@ -350,9 +351,9 @@ module.exports = function(app){
     })
   })
   app.delete('/del/news', function(req, res){
-    var news = new News(null),
-        newsName = req.query.name;
-      news.delete(newsName, function(err, news){
+    var news = new News({}),
+        newsTitle = req.query.title;
+      news.delete(newsTitle, function(err, news){
         if(err){
           res.send(err);
         }else{
@@ -369,6 +370,51 @@ module.exports = function(app){
         res.send(err);
       }
       res.send(news)
+    })
+  })
+  app.post('/post/webInfo', function(req, res){
+    var newWebInfo = new WebInfo(req.body)
+    newWebInfo.save(function(err, webInfo){
+      if(err){
+        res.send(err);
+      }else{
+        res.send(webInfo);
+      }
+    })
+  })
+  app.get('/get/webInfo', function(req, res){
+    var newName = null;
+    if(req.query.name){
+      newName = req.query.name;
+    }
+    WebInfo.get(newName, function(err, webInfo){
+      if(err){
+        res.send(err);
+      }else{
+        res.send(webInfo);
+      }
+    })
+  })
+  app.delete('/del/webInfo', function(req, res){
+    var webInfo = new WebInfo({}),
+        webInfoTitle = req.query.title;
+      webInfo.delete(webInfoTitle, function(err, webInfo){
+        if(err){
+          res.send(err);
+        }else{
+          res.send("删除成功!");
+        }
+      })
+  })
+  app.put('/put/webInfo', function(req, res){
+    var webInfo = new WebInfo(req.body),
+        webInfoId = req.body['_id'];
+        newData = req.body;
+    webInfo.update(webInfoId, newData, function(err, webInfo){
+      if(err){
+        res.send(err);
+      }
+      res.send(webInfo)
     })
   })
 }
